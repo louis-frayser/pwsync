@@ -1,5 +1,6 @@
+%-*-prolog-*-
 library_directory("library").
-
+:- use_module(report).
 :- use_module([library(lambda), library(list)]).
 
 %%% 1. Lookup each entry of Control in UUT and classify as missing of incorrect.
@@ -10,7 +11,6 @@ library_directory("library").
 %%%
 pw_sync(UUT,Control,Missing,Incorrect):-
 	categorize(UUT,Control, Missing,Incorrect).
-
 
 %%% Categorize items in the UUT as either missing or inconflict with the
 %%% control. We use the the partition' function, so classify needs to return
@@ -47,15 +47,6 @@ categorize(UUT,[Control_H|Control_T],Missing,Incorrect):-
 
 		      
 	
-%%% Read input: I/O
-%%% Process input
-%%% Output: I/O (reports)
-run :- read_passwd('/usr/ghost/etc/passwd', Control),
-	read_passwd('/etc/passwd',UUT), write('Reading Done\n'),
-	pw_sync(UUT,Control,Missing,Incorrect),
-	report(missing,Missing),
-	report(incorrect,Incorrect).
-
 	
 
 read_passwd(Spec,Pws) :-
@@ -81,3 +72,12 @@ decode_pw(Atoms,[passwd(Name,Passwd,Uid,Gid,Gecos,Dir,Shell)|Pws]) :-
 
 is_colon(:).
 is_nl('\n').
+
+%%% Read input: I/O
+%%% Process input
+%%% Output: I/O (reports)
+run :- read_passwd('/usr/ghost/etc/passwd', Control),
+	read_passwd('/etc/passwd',UUT), write('Reading Done\n'),
+	pw_sync(UUT,Control,Missing,Incorrect),
+	report(missing,Missing),
+	report(incorrect,Incorrect).
