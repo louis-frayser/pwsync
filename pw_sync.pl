@@ -4,6 +4,8 @@ library_directory("library").
 :- use_module(pw_file).
 :- use_module([library(lambda), library(list)]).
 
+:- dynamic([control/1, current/1]).
+
 %%% 1. Lookup each entry of Control in UUT and classify as missing of incorrect.
 %%%    Return the unmatched items from both sets.
 %%%    categorize(UUT,Control,Missing,Incorrect).
@@ -45,15 +47,51 @@ categorize(UUT,[Control_H|Control_T],Missing,Incorrect):-
 	),
 	categorize(UUT,Control_T, M,I).
 
+add_user(User, Current,Currrent1,Missing,Missing1) :-
+    throw(error(existence_error,not_implimented)).
+fix_user(User, Current,Currrent1,Missing,Missing1) :-
+    throw(error(existence_error,not_implimented)).
 
-		      
+%%% Update global state
+update(PV1,PV2):-
+    PV1=..[P1,V1],retractall(P1), T1=..[P1|V1], assert(T1),
+    PV2=..[P2,V2],retractall(P2), T2=..[P2|V2], assert(T2).
+
+sync_user(User) :- get_state(_Control, Current, Missing, Incorrect),
+		   ( member(User, Incorrect)
+		   -> fix_user(User, Current, Current1, Incorrect, Incorrect1),
+		      update(current(Current1), incorect(Incorrect1))
+		   ; member(User, Missing)
+		     -> add_user(User, Current,Current1,Missing,Missing1),
+			update(curernert(Current1), missing(Missing1))
+		   ; throw(error(existence_eror, user(User)))
+		   ).
 	
 
+%%% Read input: Does I/O if not cached
+%%% Analyze data
+get_state(Control, Current, Missing, Incorrect) :-
+    ( control(Control)
+    -> current(Current)
+    ; read_passwd('/usr/ghost/etc/passwd', Control),
+      read_passwd('/etc/passwd',Current),
+      write('Reading Done\n')
+    ),
+    pw_sync(Current,Control,Missing,Incorrect).
+
+
+%%% Cache state as globals
+set_state(Control, Current, Missing, Incorrect) :-
+    assert(control(Control)),
+    assert(current(Current)),
+    assert(missing(Missing)),
+    assert(incorrect(Incorrect)).
+
 %%% Read input: I/O
-%%% Process input
-%%% Output: I/O (reports)
-run :- read_passwd('/usr/ghost/etc/passwd', Control),
-	read_passwd('/etc/passwd',UUT), write('Reading Done\n'),
-	pw_sync(UUT,Control,Missing,Incorrect),
-	report(missing,Missing),
-	report(incorrect,Incorrect).
+%%% Process inpu	   
+%%% Output: I/O (reports)	   
+run :- get_state(_Control, _Current, Missing, Incorrect),
+    report(missing,Missing),
+    report(incorrect,Incorrect),
+    writeln("Use sync_user/1 to update passwd"),
+    writeln("Use set_state/4 to cache results").
