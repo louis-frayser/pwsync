@@ -88,7 +88,7 @@ set_state(Control, Current, Missing, Incorrect) :-
     assert(incorrect(Incorrect)).
 
 %%% Read input: I/O
-%%% Process inpu	   
+%%% Process input	   
 %%% Output: I/O (reports)	   
 run :- get_state(_Control, _Current, Missing, Incorrect),
     report(missing,Missing),
